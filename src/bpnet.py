@@ -84,15 +84,15 @@ def BPNetTrain(X, H, layerNum, neuronNumList, batchNum, step, actFunction, task)
         step: The gradient descent step.
         actFunction: the choose of active function, which can take three choose :
                     actFuntion = 'sigmoid', actFuntion = 'tanh', actFuntion = 'ReLU'.
-        task: if classification task, then choose task = 'classification',
-                      if regression task, then choose task = 'regression'.
+        task:   if classification task, then choose task = 'classification',
+                if regression task, then choose task = 'regression'.
 
     Example :
         BPNetTrain(X = trainImage, H = labelMatrix, layerNum = 3, neuronNumList = [784, 300 , 10], batchNum = 1000,
                     step = 0.1, actFunction = 'ReLU', task = 'crossEntropy')
 
     注 ： 第一层节点数 784 为输入的原始图像像素点维数，而最后一层的节点数 10 为分类的类别数;
-          因此这是一个三层的网络，只有一个隐藏层，其有 300 个神经元节点。
+            因此这是一个三层的网络，只有一个隐藏层，其有 300 个神经元节点。
     """
 
     # 参数初始化，注意每一层网络都是设置了 bias 的，因此每一层的矩阵 B 的第一行都是偏置行向量.
