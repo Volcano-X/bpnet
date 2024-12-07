@@ -22,5 +22,5 @@ unzip `mnist_label_train.zip` first to get `mnist_label_train.csv`. then run the
 
 ```bash
 cd code
-python3 code/test.py
+python3 code/main.py
 ```
