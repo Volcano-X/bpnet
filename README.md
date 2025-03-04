@@ -21,6 +21,6 @@ I mainly untilize the Jacobia matrix for [Mathematical Derivation](https://volca
 unzip `mnist_label_train.zip` first to get `mnist_label_train.csv`. then run the following code:
 
 ```bash
-cd code
-python3 code/main.py
+cd src
+python3 src/main.py
 ```

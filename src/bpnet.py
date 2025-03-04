@@ -110,7 +110,7 @@ def BPNetTrain(X, H, layerNum, neuronNumList, batchNum, step, actFunction, task)
 
     alpha = step / batchNum  # 批量梯度需要平均，这部分可以直接一次性体现在步长中
     # 训练网络的迭代参数：总共迭代多少次训练样本
-    globalIterMax = 2
+    globalIterMax = 100
     localIterMax = X.shape[0] // batchNum  # 训练样本可以分成多少个 batch.
     globalIter = 0
     localIter = 0
