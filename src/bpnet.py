@@ -18,7 +18,7 @@ def lossFun(H, Y_hat, fun):
     if fun == "crossEntropy":
         # 计算 交叉熵 损失函数的值
         # H: 标签矩阵，每一行表示一个样本 one-hot 类别标签行向量， Y_hat: 网络最后输出得到的预测标签矩阵，每一行表示一个样本的概率分布行向量
-        # loss = - <H, log Y_hat> /m
+        # loss = - <H, log Y_hat> / m
         temp = Y_hat[H == 1]
         lossValue = -np.mean(np.log(temp))
     elif fun == "squareLoss":
