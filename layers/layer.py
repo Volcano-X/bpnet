@@ -1,5 +1,6 @@
 import numpy as np
 
+
 class Layer:
     def __init__(self):
         # input: Y, output: Z
@@ -10,10 +11,10 @@ class Layer:
         self.d_W = None
         self.d_b = None
         self.d_Y = None
-        
+
     def forward(self, Y):
         raise NotImplementedError
-    
+
     def backward(self, d_Z):
         raise NotImplementedError
 
@@ -40,6 +41,7 @@ class FullyConnectedLayer(Layer):
         self.d_Y = np.dot(d_Z, self.W.T)
         return self.d_Y
 
+
 class ReLU:
     def __init__(self):
         # input: Z, output: Y
@@ -52,7 +54,7 @@ class ReLU:
         Z[Z < 0] = 0
         self.Y = Z
         return self.Y
-    
+
     def backward(self, d_Y):
         d_ReLU = self.Y
         d_ReLU[d_ReLU > 0] = 1
