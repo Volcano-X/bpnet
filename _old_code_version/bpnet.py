@@ -96,17 +96,18 @@ def BPNetTrain(X, H, layerNum, neuronNumList, batchNum, step, actFunction, task)
     """
 
     # 参数初始化，注意每一层网络都是设置了 bias 的，因此每一层的矩阵 B 的第一行都是偏置行向量.
-    parametersB = layerNum * [
-        0
-    ]  # 为了与 pdf 推导的公式一致， 0 索引的位置不用， layerNum = ell + 1
+    # 为了与 pdf 推导的公式一致， 0 索引的位置不用， layerNum = ell + 1
+    # parametersB = layerNum * [0]
+    parameters = {'B': layerNum * [0], 'b': layerNum * [0]}
     # 正态分布初始化网络参数  Xavier/He initialization.
+    # parameters_bias = layerNum * [0]
     for i in range(1, layerNum):  # 初始化 [1,...,ell]
-        parametersB[i] = np.random.normal(
+        parameters['B'][i] = np.random.normal(
             0,
             np.sqrt(2 / (neuronNumList[i - 1] + neuronNumList[i])),
-            (neuronNumList[i - 1] + 1, neuronNumList[i]),
+            (neuronNumList[i - 1], neuronNumList[i]),
         )
-        parametersB[i][0, :] = 0  # 偏置行初始化为 0.
+        parameters['b'][i] = np.zeros((1, neuronNumList[i]))  # 偏置行初始化为 0.
 
     alpha = step / batchNum  # 批量梯度需要平均，这部分可以直接一次性体现在步长中
     # 训练网络的迭代参数：总共迭代多少次训练样本
@@ -134,28 +135,28 @@ def BPNetTrain(X, H, layerNum, neuronNumList, batchNum, step, actFunction, task)
             batchX = X[batchIndex, :]
             batchH = H[batchIndex, :]
             # 前向传播,得到中间结果
-            middleZ, middleY = forwardProp(batchX, parametersB, actFunction, task)
+            middleZ, middleY = forwardProp(batchX, parameters, actFunction, task)
             # 计算所有梯度的平均
-            B_G = backProp(
-                batchX, batchH, middleZ, middleY, parametersB, actFunction, task
-            )
+            parameters_G = backProp(batchH, middleY, parameters, actFunction, task)
             # 更新参数, 梯度下降公式
             for i in range(1, layerNum):
-                parametersB[i] = parametersB[i] - alpha * B_G[i].T
+                parameters['B'][i] = parameters['B'][i] - alpha * parameters_G['B'][i].T
+                parameters['b'][i] = parameters['b'][i] - alpha * parameters_G['b'][i].T
+                
             # 更新样本内迭代次数
             localIter = localIter + 1
         # 更新样本外迭代次数
         globalIter = globalIter + 1
         # 一轮训练样本迭代结束后，查看当前参数对任务的适应情况
-        Y_hat = BPNetMap(X, parametersB, actFunction, task)
+        Y_hat = BPNetMap(X, parameters, actFunction, task)
         showResult(H, Y_hat, task)
-    return parametersB
+    return parameters
 
 
-def backProp(X, H, middleZ, middleY, parametersB, actFunction, task):
+def backProp(H, middleY, parameters, actFunction, task):
     # 计算后向传播的梯度
-    layerNum = len(parametersB)  # layerNum = ell + 1
-    B_G = layerNum * [0]
+    layerNum = len(parameters['B'])  # layerNum = ell + 1
+    parameters_G = {'B': layerNum * [0], 'b': layerNum * [0]}
 
     # 计算顶层梯度 Z_G, 这个顶层梯度是后向传播算法的初始输入（关键），其由损失函数等决定
     if task == "classification":
@@ -165,38 +166,33 @@ def backProp(X, H, middleZ, middleY, parametersB, actFunction, task):
 
     # 计算出顶层的梯度 Z_G 之后，按照 PDF 的三个后向传播公式计算
     for i in range(layerNum - 1, 1, -1):
-        B_G[i] = dot(Z_G.T, middleY[i - 1])
-        Y_G = dot(
-            Z_G, parametersB[i][1:, :].T
-        )  # 注意要把 Y_G 的第一列去除，等价于去除 parametersB[i] 的第一行（偏置行），详见 PDF 推导
-        G_G = activeFun_G(
-            middleY[i - 1][:, 1:], actFunction
-        )  # 注意把 middleY[i-1] 的第一列去除
+        parameters_G['B'][i] = dot(Z_G.T, middleY[i - 1])
+        parameters_G['b'][i] = dot(Z_G.T, np.ones((middleY[i-1].shape[0], 1)))
+        Y_G = dot(Z_G, parameters['B'][i].T)
+        G_G = activeFun_G(middleY[i - 1], actFunction)
         Z_G = Y_G * G_G
 
     # 最后一层导数
-    B_G[1] = dot(Z_G.T, middleY[0])
-    return B_G
+    parameters_G['B'][1] = dot(Z_G.T, middleY[0])
+    parameters_G['b'][1] = dot(Z_G.T, np.ones((middleY[0].shape[0], 1)))
+    return parameters_G
 
 
-def forwardProp(X, parametersB, actFunction, task):
+def forwardProp(X, parameters, actFunction, task):
     # 计算并返回前向传播的输出值和一些中间结果的值
     # 矢量化计算，X可以是样本矩阵，其中X的每一行表示一个样本
-    layerNum = len(parametersB)  # 网络层数
+    layerNum = len(parameters['B'])  # 网络层数
     middleY = layerNum * [0]
-    middleY[0] = np.hstack((np.ones((X.shape[0], 1)), X))
+    middleY[0] = X
     middleZ = layerNum * [0]
 
     # 网络层前向传播 [1,...,ell-1]
     for i in range(1, layerNum - 1):
-        middleZ[i] = dot(middleY[i - 1], parametersB[i])
+        middleZ[i] = dot(middleY[i - 1], parameters['B'][i]) + parameters['b'][i]
         middleY[i] = activeFun(middleZ[i], fun=actFunction)
-        middleY[i] = np.hstack((np.ones((middleY[i].shape[0], 1)), middleY[i]))
 
     # 最后一层网络
-    middleZ[layerNum - 1] = dot(
-        middleY[layerNum - 2], parametersB[layerNum - 1]
-    )  # 线性映射
+    middleZ[layerNum - 1] = dot(middleY[layerNum - 2], parameters['B'][layerNum - 1]) + parameters['b'][layerNum - 1] # 线性映射
     if task == "classification":
         # softmax 映射
         middleY[layerNum - 1] = softmax(middleZ[layerNum - 1])
@@ -207,19 +203,18 @@ def forwardProp(X, parametersB, actFunction, task):
     return middleZ, middleY
 
 
-def BPNetMap(X, parametersB, actFunction, task):
+def BPNetMap(X, parameters, actFunction, task):
     # 学习到的网络映射
-    layerNum = len(parametersB)  # 网络层数
-    Y = np.hstack((np.ones((X.shape[0], 1)), X))
+    layerNum = len(parameters['B'])  # 网络层数
+    Y = X
 
     # 网络层前向传播 [1,...,ell-1]
     for i in range(1, layerNum - 1):
-        Z = dot(Y, parametersB[i])
+        Z = dot(Y, parameters['B'][i]) + parameters['b'][i]
         Y = activeFun(Z, fun=actFunction)
-        Y = np.hstack((np.ones((Y.shape[0], 1)), Y))
 
     # 最后一层网络
-    Z = dot(Y, parametersB[layerNum - 1])  # 线性映射
+    Z = dot(Y, parameters['B'][layerNum - 1]) + parameters['b'][layerNum - 1] # 线性映射
     if task == "classification":
         # softmax 映射
         Y_hat = softmax(Z)

@@ -47,7 +47,7 @@ def main():
     actFunction = "sigmoid"
 
     task = "classification"
-    parametersB = BPNetTrain(
+    parameters = BPNetTrain(
         X, H, layerNum, neuronNumList, batchNum, step, actFunction, task
     )
 
@@ -55,7 +55,7 @@ def main():
     # parametersB = BPNetTrain(X, X, layerNum, neuronNumList, batchNum, step, actFunction, task)
 
     # 测试数据上的结果
-    Y_hat = BPNetMap(testImage, parametersB, actFunction, task)
+    Y_hat = BPNetMap(testImage, parameters, actFunction, task)
     # show test result
     print("test data result: ", end="\n\n")
     showResult(testLabelMatrix, Y_hat, task)
