@@ -28,14 +28,14 @@ if __name__ == "__main__":
 
     # define network structure
     model = NeuralNetwork()
-    model.add(FullyConnectedLayer(784, 300))
+    model.add(FullyConnectedLayer(784, 512))
     model.add(ReLU())
-    model.add(FullyConnectedLayer(300, 10))
+    model.add(FullyConnectedLayer(512, 10))
 
     model.set_loss_function(CrossEntropyLoss())
-    model.set_optimizer(SGD(learning_rate=1e-4))
+    model.set_optimizer(SGD(learning_rate=1e-3))
 
-    model.train(X_train, Y_train, batch_size=500, epochs=100)
+    model.train(X_train, Y_train, batch_size=512, epochs=100)
 
     Z_test = model.forward(X_test)
     loss, acc = CE_loss_acc(Z_test, Y_test)
