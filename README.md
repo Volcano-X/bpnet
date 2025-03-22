@@ -1,4 +1,4 @@
-# bpnet
+# Bpnet
 
 Written by zhengjiacan, Shenzhen University, 2025/03/22.
 
@@ -27,7 +27,7 @@ I mainly untilize Jacobia matrix for [Mathematical Derivation](https://volcano-x
 
     https://volcano-x.github.io/2024/12/07/bp-network/
 
-## how to run
+## How to run
 
 Unzip `mnist_label_train.zip` first to get `mnist_label_train.csv`, then run the following code:
 
